@@ -7,7 +7,6 @@ t = Terminal()
 
 class Tools():
     def push(self, comment):
-        self.make_docs()
         t.run('git add .')
         t.run('git commit -m "{}"'.format(comment))
         t.run('git push origin')
