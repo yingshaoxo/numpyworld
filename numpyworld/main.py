@@ -1,7 +1,11 @@
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
+from moviepy.editor import VideoClip
+import os
+
 from random import randint
+from io import BytesIO
 
 
 class World():
@@ -9,6 +13,8 @@ class World():
         self.disable_jupyter_notebook_mode()
 
     def enable_jupyter_notebook_mode(self):
+        import IPython as IPython
+        self._IPython = IPython
         self._notebook = True
 
     def disable_jupyter_notebook_mode(self):
@@ -34,6 +40,10 @@ class World():
 
     def show(self):
         if self._notebook:
+            # self._IPython.display.clear_output()
+            #f = BytesIO()
+            # Image.fromarray(self.image).save(f, 'png') #jpeg
+            # self._IPython.display.display(self._IPython.display.Image(data=f.getvalue()))
             plt.figure(num='numpy world')
             plt.imshow(self.image)
             figManager = plt.get_current_fig_manager()
@@ -47,6 +57,31 @@ class World():
 
     def save(self, target_file_path="temp.png"):
         Image.fromarray(self.image).convert("RGB").save(target_file_path)
+
+    def show_animation(self, a_function_which_returns_an_image_according_to_a_time_variable, duration=3, fps=24, saving_path=None):
+        """
+        the function looks like `func(t)`.
+        t is a float variable in seconds, for example, 1.2 = 1 second + 0.2 second
+        """
+        animation = VideoClip(
+            a_function_which_returns_an_image_according_to_a_time_variable, duration=duration)
+        if self._notebook:
+            result = animation.ipython_display(
+                fps=fps, loop=True, autoplay=True)
+            self._IPython.display.display(result)
+        else:
+            animation.preview(fps=fps)
+
+        if saving_path != None:
+            if len(saving_path.split(".")) > 0:
+                extension = saving_path.split(".")[-1]
+                if extension.lower() == "gif":
+                    animation.write_gif(saving_path, fps=fps)
+                elif extension.lower() == "mp4":
+                    animation.write_videofile(saving_path, fps=fps)
+                else:
+                    print("you can only save gif or mp4!")
+                    exit()
 
 
 if __name__ == "__main__":
