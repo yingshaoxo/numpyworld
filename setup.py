@@ -29,5 +29,6 @@ setup(
         'matplotlib',
         'pillow',
         'moviepy',
+        "pygame",
     ]
 )
