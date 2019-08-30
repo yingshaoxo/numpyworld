@@ -1,6 +1,6 @@
 # Numpy World
 
-Draw this world with numpy.  [(start now)](https://github.com/yingshaoxo/numpyworld/blob/master/Example.ipynb)
+Draw this world with numpy.  
 
 > We firmly believe once you can draw one picture with programming, you can also draw a series of that kind of pictures with programming too.
 
@@ -12,7 +12,7 @@ sudo pip3 install numpyworld
 
 ### Usage
 
-```
+```python
 from numpyworld import World
 
 width = 1920
@@ -33,3 +33,7 @@ for x in range(width):
 
 world.show()
 ```
+
+### More
+
+[Jupyter-notebook Examples](https://github.com/yingshaoxo/numpyworld/blob/master/Example.ipynb)
