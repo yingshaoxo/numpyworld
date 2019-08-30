@@ -7,7 +7,7 @@ with open(file_path) as f:
 
 setup(
     name='numpyworld',
-    version='0.2',
+    version='0.3',
     description='Use numpy to create a world that you dreamed about!',
     long_description_content_type='text/markdown',
     long_description=long_description,
@@ -29,6 +29,8 @@ setup(
         'matplotlib',
         'pillow',
         'moviepy',
-        "pygame",
-    ]
+    ],
+    extras_require={
+        'animation': ['pygame'],
+    },
 )
