@@ -1,1 +1,1 @@
-from .main import World
+from .main import Object, World

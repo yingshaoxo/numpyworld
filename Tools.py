@@ -22,6 +22,12 @@ git reset --hard origin/master
 git reset --hard HEAD^
 """)
 
+    def test(self):
+        t.run("""
+cd numpyworld
+pytest -s --disable-pytest-warnings
+        """)
+
     def install(self):
         t.run("""
 sudo rm -fr dist
