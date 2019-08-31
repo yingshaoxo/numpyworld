@@ -96,9 +96,8 @@ class World():
         assert len(left_top_position) == 2, "left_top_position should be (x, y)"
         x, y = left_top_position
 
-        #print(self.image[y:y+h, x:x+w]==[-1, -1, -1, 255])
-        #self.image[y:y+h, x:x+w] = np.where(self.image[y:y+h, x:x+w]==[-1, -1, -1, 255], object_image, self.image[y:y+h, x:x+w])
-        self.image[y:y+h, x:x+w] = object_image
+        mask = object_image[:, :, 3] == 255
+        self.image[y:y+h, x:x+w][mask] = object_image[mask]
 
     def show(self):
         if self._notebook:
