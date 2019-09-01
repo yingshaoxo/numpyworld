@@ -52,10 +52,19 @@ class Object():
         mask = np.all(self.image[:, :, 0:4] == old_color, axis=2)
         self.image[mask] = new_color
 
+        self._color = tuple(new_color[:3])
+
+    def draw_a_point(self, x, y, color=(0, 0, 0)):
+        if len(color) == 3:
+            self.image[y][x] = (color[0], color[1], color[2], 255)
+        elif len(color) == 4:
+            self.image[y][x] = (color[0], color[1], color[2], color[3])
+
 
 class World():
     def __init__(self, dimension=2):
         self.disable_jupyter_notebook_mode()
+        self._backup_images = {}
 
     def enable_jupyter_notebook_mode(self):
         import IPython as IPython
@@ -77,6 +86,17 @@ class World():
         image = np.insert(image, 3, 255, axis=2)
         self.image = image
 
+    def backup(self, key="default"):
+        assert isinstance(key, str), "key must be a string"
+        self._backup_images.update({key: self.image.copy()})
+
+    def restore(self, key="default"):
+        assert isinstance(key, str), "key must be a string"
+        if len(self._backup_images) != 0:
+            result = self._backup_images.get(key)
+            if isinstance(result, np.ndarray):
+                self.image = result.copy()
+
     def get_random_color(self):
         r = randint(0, 255)
         g = randint(0, 255)
@@ -93,11 +113,31 @@ class World():
         assert len(object_shape) == 3 and object_shape[2] == 4, f"The shape of that numpy_array should be (*, *, 4), but you gave me {shape}"
         h, w, _ = object_shape
 
-        assert len(left_top_position) == 2, "left_top_position should be (x, y)"
+        assert len(left_top_position) == 2, "left_top_position should be positive (x, y)"
         x, y = left_top_position
 
+        if x < 0 or y < 0:
+            return
+
         mask = object_image[:, :, 3] == 255
-        self.image[y:y+h, x:x+w][mask] = object_image[mask]
+        max_y, max_x, _ = self.image.shape
+        if y+h <= max_y and x+w <= max_x:
+            #print(mask.shape)
+            #print("y: ", y, y+h)
+            #print(self.image[y:y+h, x:x+w].shape)
+            #print(self.image[y:y+h, x:x+w][mask].shape)
+            self.image[y:y+h, x:x+w][mask] = object_image[mask]
+        else:
+            if y < max_y and x < max_x:
+                avaliable_y = max_y - y 
+                avaliable_x = max_x - x
+                mask = mask[0:avaliable_y, 0:avaliable_x]
+                #print(object_image[0:avaliable_y, 0:avaliable_x].shape)
+                #print(mask.shape)
+                #print(object_image[0:avaliable_y, 0:avaliable_x][mask].shape)
+                #print(self.image[y:y+avaliable_y, x:x+avaliable_x].shape)
+                #print(self.image[y:y+h, x:x+w][mask].shape)
+                self.image[y:y+h, x:x+w][mask] = object_image[0:avaliable_y, 0:avaliable_x][mask]
 
     def show(self):
         if self._notebook:
