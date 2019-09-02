@@ -62,9 +62,29 @@ class Object():
 
 
 class World():
-    def __init__(self, dimension=2):
+    def __init__(self, width=1920, height=1080, background_color=(255, 255, 255), existing_picture=None):
+        self.image = self._create_an_image(width, height, background_color, existing_picture)
+
         self.disable_jupyter_notebook_mode()
         self._backup_images = {}
+
+    def _create_an_image(self, width=1920, height=1080, background_color=(255, 255, 255), existing_picture=None):
+        if isinstance(existing_picture, np.ndarray):
+            image = np.zeros(
+                (existing_picture.shape[0], existing_picture.shape[1], 3), dtype=np.uint8)
+        else:
+            image = np.zeros((height, width, 3), dtype=np.uint8)
+
+        assert 3 <= len(background_color) <= 4, "the background_color is something like RGB(255, 255, 255) or RGBA(0,0,0,0)"
+        image[:, :] = list(background_color)[:3]
+
+        # add an alpha layer for transparency
+        if len(background_color) == 3:
+            image = np.insert(image, 3, 255, axis=2)
+        elif len(background_color) == 4:
+            image = np.insert(image, 3, background_color[3], axis=2)
+
+        return image
 
     def enable_jupyter_notebook_mode(self):
         import IPython as IPython
@@ -74,17 +94,8 @@ class World():
     def disable_jupyter_notebook_mode(self):
         self._notebook = False
 
-    def create_an_image(self, width=1920, height=1080, background_color=(255, 255, 255), existing_picture=None):
-        if isinstance(existing_picture, np.ndarray):
-            image = np.zeros(
-                (existing_picture.shape[0], existing_picture.shape[1], 3), dtype=np.uint8)
-        else:
-            image = np.zeros((height, width, 3), dtype=np.uint8)
-        image[:, :] = background_color
-
-        # add an alpha layer for transparency
-        image = np.insert(image, 3, 255, axis=2)
-        self.image = image
+    def create_an_object(self, numpy_array, color=(0, 0, 0)):
+        return Object(numpy_array, color=color)
 
     def backup(self, key="default"):
         assert isinstance(key, str), "key must be a string"
@@ -106,12 +117,20 @@ class World():
     def draw_a_point(self, x, y, color=(0, 0, 0)):
         self.image[y][x] = (color[0], color[1], color[2], 255)
 
-    def draw(self, object_image, left_top_position=(0, 0)):
-        assert isinstance(object_image, np.ndarray), "the object_image paramater must be an numpy array"
+    def draw(self, object_image, left_top_position=(0, 0), center_position=None):
+        if isinstance(object_image, Object):
+            object_image = object_image.image
+        assert isinstance(object_image, np.ndarray), "the first paramater must be an numpy array, try to give `object.image` as the paramater"
 
         object_shape = object_image.shape
         assert len(object_shape) == 3 and object_shape[2] == 4, f"The shape of that numpy_array should be (*, *, 4), but you gave me {shape}"
         h, w, _ = object_shape
+
+        if center_position != None:
+            assert len(center_position) == 2, "center_position must be (x,y)"
+            left_top_x = center_position[0] - w/2
+            left_top_y = center_position[1] - h/2
+            left_top_position = (int(left_top_x), int(left_top_y))
 
         assert len(left_top_position) == 2, "left_top_position should be positive (x, y)"
         x, y = left_top_position
@@ -129,11 +148,11 @@ class World():
             self.image[y:y+h, x:x+w][mask] = object_image[mask]
         else:
             if y < max_y and x < max_x:
-                avaliable_y = max_y - y 
+                avaliable_y = max_y - y
                 avaliable_x = max_x - x
                 mask = mask[0:avaliable_y, 0:avaliable_x]
                 #print(object_image[0:avaliable_y, 0:avaliable_x].shape)
-                #print(mask.shape)
+                # print(mask.shape)
                 #print(object_image[0:avaliable_y, 0:avaliable_x][mask].shape)
                 #print(self.image[y:y+avaliable_y, x:x+avaliable_x].shape)
                 #print(self.image[y:y+h, x:x+w][mask].shape)
