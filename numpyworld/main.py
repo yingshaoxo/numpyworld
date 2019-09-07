@@ -15,8 +15,6 @@ class Object():
         shape = numpy_array.shape
         assert len(shape) == 3 and shape[2] in [1, 3, 4], f"The shape of that numpy_array should be (*, *, 1 or 3 or 4), but you gave me {shape}"
 
-        numpy_array = numpy_array.astype(int)
-
         """
         numpy.where(condition[, x, y])
         condition : array_like, bool, Where True, yield x, otherwise yield y.
@@ -26,18 +24,21 @@ class Object():
         if shape[2] == 1:
             self._raw_data = numpy_array
             self._color = color
-            self.image = np.where(numpy_array == 1, [color[0], color[1], color[2], 255], [0, 0, 0, 0])
+            if len(color) == 3:
+                self.image = np.where(numpy_array == 1, [color[0], color[1], color[2], 255], [0, 0, 0, 0]).astype(np.uint8)
+            elif len(color) == 4:
+                self.image = np.where(numpy_array == 1, [color[0], color[1], color[2], color[3]], [0, 0, 0, 0]).astype(np.uint8)
         # rgb array, like the format of jpg
         elif shape[2] == 3:
             self._raw_data = None
             self._color = None
-            self.image = np.insert(numpy_array, 3, 255, axis=2)
+            self.image = np.insert(numpy_array, 3, 255, axis=2).astype(np.uint8)
 
         # rgba array, like the format of png
         elif shape[2] == 4:
             self._raw_data = None
             self._color = None
-            self.image = numpy_array
+            self.image = numpy_array.astype(np.uint8)
 
     def change_color(self, new_color, old_color=None):
         if old_color == None:
@@ -80,9 +81,9 @@ class World():
 
         # add an alpha layer for transparency
         if len(background_color) == 3:
-            image = np.insert(image, 3, 255, axis=2)
+            image = np.insert(image, 3, 255, axis=2).astype(np.uint8)
         elif len(background_color) == 4:
-            image = np.insert(image, 3, background_color[3], axis=2)
+            image = np.insert(image, 3, background_color[3], axis=2).astype(np.uint8)
 
         return image
 
@@ -115,11 +116,14 @@ class World():
         return (r, g, b)
 
     def draw_a_point(self, x, y, color=(0, 0, 0)):
-        self.image[y][x] = (color[0], color[1], color[2], 255)
+        if len(color) == 3:
+            self.image[y][x] = (color[0], color[1], color[2], 255)
+        elif len(color) == 4:
+            self.image[y][x] = (color[0], color[1], color[2], color[3])
 
     def draw(self, object_image, left_top_position=(0, 0), center_position=None):
-        if isinstance(object_image, Object):
-            object_image = object_image.image
+        # if isinstance(object_image, Object):
+        #    object_image = object_image.image
         assert isinstance(object_image, np.ndarray), "the first paramater must be an numpy array, try to give `object.image` as the paramater"
 
         object_shape = object_image.shape
@@ -133,30 +137,12 @@ class World():
             left_top_position = (int(left_top_x), int(left_top_y))
 
         assert len(left_top_position) == 2, "left_top_position should be positive (x, y)"
-        x, y = left_top_position
 
-        if x < 0 or y < 0:
-            return
+        backgound_Image = Image.fromarray(self.image, mode="RGBA")
+        object_Image = Image.fromarray(object_image, mode="RGBA")
+        backgound_Image.paste(object_Image, box=left_top_position, mask=object_Image)
 
-        mask = object_image[:, :, 3] == 255
-        max_y, max_x, _ = self.image.shape
-        if y+h <= max_y and x+w <= max_x:
-            #print(mask.shape)
-            #print("y: ", y, y+h)
-            #print(self.image[y:y+h, x:x+w].shape)
-            #print(self.image[y:y+h, x:x+w][mask].shape)
-            self.image[y:y+h, x:x+w][mask] = object_image[mask]
-        else:
-            if y < max_y and x < max_x:
-                avaliable_y = max_y - y
-                avaliable_x = max_x - x
-                mask = mask[0:avaliable_y, 0:avaliable_x]
-                #print(object_image[0:avaliable_y, 0:avaliable_x].shape)
-                # print(mask.shape)
-                #print(object_image[0:avaliable_y, 0:avaliable_x][mask].shape)
-                #print(self.image[y:y+avaliable_y, x:x+avaliable_x].shape)
-                #print(self.image[y:y+h, x:x+w][mask].shape)
-                self.image[y:y+h, x:x+w][mask] = object_image[0:avaliable_y, 0:avaliable_x][mask]
+        self.image = np.array(backgound_Image).astype(np.uint8)
 
     def show(self):
         if self._notebook:
@@ -214,8 +200,7 @@ if __name__ == "__main__":
     width = 1920
     height = 1080
 
-    world = World()
-    world.create_an_image(width=width, height=height)
+    world = World(width=width, height=height)
     world.disable_jupyter_notebook_mode()
 
     for x in range(width):
