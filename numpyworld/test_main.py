@@ -1,7 +1,11 @@
 import numpy as np
 import pytest
 
-from .main import Object
+try:
+    from .main import Object
+except Exception as e:
+    print(e)
+    from main import Object
 
 
 class TestObject():
@@ -30,8 +34,12 @@ class TestObject():
         self.obj = Object(array, (0, 0, 0))
 
     def test_color_changing(self):
-        array = np.array([[[34, 42, 3, 1], [22, 33, 3, 0]]])
+        array = np.array([[[255, 0, 0, 255], [0, 255, 0, 255]]])
         obj = Object(array, (0, 0, 0))
-        assert np.all(obj.image == np.array([[[34, 42,  3,  1], [22, 33,  3,  0]]]))
-        obj.change_color(new_color=(0, 0, 0), old_color=(34, 42, 3))
-        assert np.all(obj.image == np.array([[[0,  0,  0,  1], [22, 33,  3,  0]]]))
+        assert np.all(obj.image == np.array([[[255, 0, 0, 255], [0, 255, 0, 255]]]))
+        obj.change_color(new_color=(0, 0, 255), old_color=(255, 0, 0))
+        assert np.all(obj.image == np.array([[[0, 0, 255, 255], [0, 255, 0, 255]]]))
+
+
+if __name__ == "__main__":
+    pass
