@@ -40,52 +40,8 @@ class Object():
             self._color = None
             self.image = numpy_array.astype(np.uint8)
 
-    def change_color(self, new_color, old_color=None):
-        if old_color == None:
-            assert self._color != None, "you have to tell me the old_color for changing the color of this object"
-            old_color = self._color
-
-        old_color = list(old_color)
-        old_color.append(255)
-        new_color = list(new_color)
-        new_color.append(255)
-
-        mask = np.all(self.image[:, :, 0:4] == old_color, axis=2)
-        self.image[mask] = new_color
-
-        self._color = tuple(new_color[:3])
-
-    def draw_a_point(self, x, y, color=(0, 0, 0)):
-        if len(color) == 3:
-            self.image[y][x] = (color[0], color[1], color[2], 255)
-        elif len(color) == 4:
-            self.image[y][x] = (color[0], color[1], color[2], color[3])
-
-
-class World():
-    def __init__(self, width=1920, height=1080, background_color=(255, 255, 255), existing_picture=None):
-        self.image = self._create_an_image(width, height, background_color, existing_picture)
-
         self.disable_jupyter_notebook_mode()
         self._backup_images = {}
-
-    def _create_an_image(self, width=1920, height=1080, background_color=(255, 255, 255), existing_picture=None):
-        if isinstance(existing_picture, np.ndarray):
-            image = np.zeros(
-                (existing_picture.shape[0], existing_picture.shape[1], 3), dtype=np.uint8)
-        else:
-            image = np.zeros((height, width, 3), dtype=np.uint8)
-
-        assert 3 <= len(background_color) <= 4, "the background_color is something like RGB(255, 255, 255) or RGBA(0,0,0,0)"
-        image[:, :] = list(background_color)[:3]
-
-        # add an alpha layer for transparency
-        if len(background_color) == 3:
-            image = np.insert(image, 3, 255, axis=2).astype(np.uint8)
-        elif len(background_color) == 4:
-            image = np.insert(image, 3, background_color[3], axis=2).astype(np.uint8)
-
-        return image
 
     def enable_jupyter_notebook_mode(self):
         import IPython as IPython
@@ -114,6 +70,21 @@ class World():
         g = randint(0, 255)
         b = randint(0, 255)
         return (r, g, b)
+
+    def change_color(self, new_color, old_color=None):
+        if old_color == None:
+            assert self._color != None, "you have to tell me the old_color for changing the color of this object"
+            old_color = self._color
+
+        old_color = list(old_color)
+        old_color.append(255)
+        new_color = list(new_color)
+        new_color.append(255)
+
+        mask = np.all(self.image[:, :, 0:4] == old_color, axis=2)
+        self.image[mask] = new_color
+
+        self._color = tuple(new_color[:3])
 
     def draw_a_point(self, x, y, color=(0, 0, 0)):
         if len(color) == 3:
@@ -163,6 +134,30 @@ class World():
 
     def save(self, target_file_path="__temp__.png"):
         Image.fromarray(self.image).convert("RGBA").save(target_file_path)
+
+
+class World(Object):
+    def __init__(self, width=1920, height=1080, background_color=(255, 255, 255), existing_picture=None):
+        numpy_array = self._create_an_image(width, height, background_color, existing_picture)
+        super().__init__(numpy_array)
+
+    def _create_an_image(self, width=1920, height=1080, background_color=(255, 255, 255), existing_picture=None):
+        if isinstance(existing_picture, np.ndarray):
+            image = np.zeros(
+                (existing_picture.shape[0], existing_picture.shape[1], 3), dtype=np.uint8)
+        else:
+            image = np.zeros((height, width, 3), dtype=np.uint8)
+
+        assert 3 <= len(background_color) <= 4, "the background_color is something like RGB(255, 255, 255) or RGBA(0,0,0,0)"
+        image[:, :] = list(background_color)[:3]
+
+        # add an alpha layer for transparency
+        if len(background_color) == 3:
+            image = np.insert(image, 3, 255, axis=2).astype(np.uint8)
+        elif len(background_color) == 4:
+            image = np.insert(image, 3, background_color[3], axis=2).astype(np.uint8)
+
+        return image
 
     def show_animation(self, a_function_which_returns_an_image_according_to_a_time_variable, duration=3, fps=24, saving_path=None):
         """

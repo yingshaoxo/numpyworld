@@ -18,8 +18,7 @@ from numpyworld import World
 width = 1920
 height = 1080
 
-world = World()
-world.create_an_image(width=width, height=height)
+world = World(width=width, height=height)
 world.disable_jupyter_notebook_mode()
 
 for x in range(width):
