@@ -40,7 +40,8 @@ class Object():
             self._color = None
             self.image = numpy_array.astype(np.uint8)
 
-        self.disable_jupyter_notebook_mode()
+        #self.disable_jupyter_notebook_mode()
+        self.enable_jupyter_notebook_mode()
         self._backup_images = {}
 
     def enable_jupyter_notebook_mode(self):
