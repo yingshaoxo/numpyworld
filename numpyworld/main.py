@@ -117,13 +117,18 @@ class Object():
 
         self.image = numpy.array(backgound_Image).astype(numpy.uint8)
 
-    def draw_text(self, text, color=(0, 0, 0, 255), left_top_position=(0, 0), font_size=10, stroke_width=1, font_name=None):
+    def draw_text(self, text, color=(0, 0, 0, 255), draw_in_center=False, left_top_position=(0, 0), font_size=10, stroke_width=1, font_name=None):
         backgound_Image = Image.fromarray(self.image, mode="RGBA")
         drawer = ImageDraw.Draw(backgound_Image)
 
         if font_name == None:
             font_name = pygame.font.match_font(pygame.font.get_fonts()[0])
         font = ImageFont.truetype(font_name, font_size)
+
+        if (draw_in_center == True):
+            _, _, text_width, text_height = drawer.textbbox((0, 0), text, font=font)
+            left_top_position = ((backgound_Image.width - text_width) / 2, (backgound_Image.height - text_height) / 2)
+
         drawer.text(left_top_position, text, font=font, fill=color, stroke_width=stroke_width)
 
         self.image = numpy.array(backgound_Image).astype(numpy.uint8)
