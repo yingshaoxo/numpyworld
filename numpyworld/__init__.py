@@ -1,1 +1,1 @@
-from .main import Object, World
+from .main import Object, World, numpy

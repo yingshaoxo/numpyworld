@@ -1,3 +1,5 @@
+.venv/
+.vscode/
 __temp__.png
 __temp__.mp4
 

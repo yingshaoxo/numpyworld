@@ -1,16 +1,16 @@
-import numpy as np
-from PIL import Image
+import numpy
+import pygame
+
+from PIL import Image, ImageDraw, ImageFont
 import matplotlib.pyplot as plt
 from moviepy.editor import VideoClip
-import os
 
 from random import randint
-from io import BytesIO
 
 
 class Object():
     def __init__(self, numpy_array, color=(0, 0, 0)):
-        assert isinstance(numpy_array, np.ndarray), "The first argument of Object() should be an numpy_array"
+        assert isinstance(numpy_array, numpy.ndarray), "The first argument of Object() should be an numpy_array"
 
         shape = numpy_array.shape
         assert len(shape) == 3 and shape[2] in [1, 3, 4], f"The shape of that numpy_array should be (*, *, 1 or 3 or 4), but you gave me {shape}"
@@ -25,20 +25,20 @@ class Object():
             self._raw_data = numpy_array
             self._color = color
             if len(color) == 3:
-                self.image = np.where(numpy_array == 1, [color[0], color[1], color[2], 255], [0, 0, 0, 0]).astype(np.uint8)
+                self.image = numpy.where(numpy_array == 1, [color[0], color[1], color[2], 255], [0, 0, 0, 0]).astype(numpy.uint8)
             elif len(color) == 4:
-                self.image = np.where(numpy_array == 1, [color[0], color[1], color[2], color[3]], [0, 0, 0, 0]).astype(np.uint8)
+                self.image = numpy.where(numpy_array == 1, [color[0], color[1], color[2], color[3]], [0, 0, 0, 0]).astype(numpy.uint8)
         # rgb array, like the format of jpg
         elif shape[2] == 3:
             self._raw_data = None
             self._color = None
-            self.image = np.insert(numpy_array, 3, 255, axis=2).astype(np.uint8)
+            self.image = numpy.insert(numpy_array, 3, 255, axis=2).astype(numpy.uint8)
 
         # rgba array, like the format of png
         elif shape[2] == 4:
             self._raw_data = None
             self._color = None
-            self.image = numpy_array.astype(np.uint8)
+            self.image = numpy_array.astype(numpy.uint8)
 
         #self.disable_jupyter_notebook_mode()
         self.enable_jupyter_notebook_mode()
@@ -63,7 +63,7 @@ class Object():
         assert isinstance(key, str), "key must be a string"
         if len(self._backup_images) != 0:
             result = self._backup_images.get(key)
-            if isinstance(result, np.ndarray):
+            if isinstance(result, numpy.ndarray):
                 self.image = result.copy()
 
     def get_random_color(self):
@@ -82,7 +82,7 @@ class Object():
         new_color = list(new_color)
         new_color.append(255)
 
-        mask = np.all(self.image[:, :, 0:4] == old_color, axis=2)
+        mask = numpy.all(self.image[:, :, 0:4] == old_color, axis=2)
         self.image[mask] = new_color
 
         self._color = tuple(new_color[:3])
@@ -94,12 +94,13 @@ class Object():
             self.image[y][x] = (color[0], color[1], color[2], color[3])
 
     def draw(self, object_image, left_top_position=(0, 0), center_position=None):
-        # if isinstance(object_image, Object):
-        #    object_image = object_image.image
-        assert isinstance(object_image, np.ndarray), "the first paramater must be an numpy array, try to give `object.image` as the paramater"
+        if isinstance(object_image, Object):
+           object_image = object_image.image
+
+        assert isinstance(object_image, numpy.ndarray), "the first paramater must be an numpy array, try to give `object.image` as the paramater"
 
         object_shape = object_image.shape
-        assert len(object_shape) == 3 and object_shape[2] == 4, f"The shape of that numpy_array should be (*, *, 4), but you gave me {shape}"
+        assert len(object_shape) == 3 and object_shape[2] == 4, f"The shape of that numpy_array should be (*, *, 4), but you gave me {object_shape}"
         h, w, _ = object_shape
 
         if center_position != None:
@@ -114,7 +115,18 @@ class Object():
         object_Image = Image.fromarray(object_image, mode="RGBA")
         backgound_Image.paste(object_Image, box=left_top_position, mask=object_Image)
 
-        self.image = np.array(backgound_Image).astype(np.uint8)
+        self.image = numpy.array(backgound_Image).astype(numpy.uint8)
+
+    def draw_text(self, text, color=(0, 0, 0, 255), left_top_position=(0, 0), font_size=10, stroke_width=1, font_name=None):
+        backgound_Image = Image.fromarray(self.image, mode="RGBA")
+        drawer = ImageDraw.Draw(backgound_Image)
+
+        if font_name == None:
+            font_name = pygame.font.match_font(pygame.font.get_fonts()[0])
+        font = ImageFont.truetype(font_name, font_size)
+        drawer.text(left_top_position, text, font=font, fill=color, stroke_width=stroke_width)
+
+        self.image = numpy.array(backgound_Image).astype(numpy.uint8)
 
     def show(self):
         if self._notebook:
@@ -143,22 +155,26 @@ class World(Object):
         super().__init__(numpy_array)
 
     def _create_an_image(self, width=1920, height=1080, background_color=(255, 255, 255), existing_picture=None):
-        if isinstance(existing_picture, np.ndarray):
-            image = np.zeros(
-                (existing_picture.shape[0], existing_picture.shape[1], 3), dtype=np.uint8)
+        if isinstance(existing_picture, numpy.ndarray):
+            image = numpy.zeros(
+                (existing_picture.shape[0], existing_picture.shape[1], 3), dtype=numpy.uint8)
         else:
-            image = np.zeros((height, width, 3), dtype=np.uint8)
+            image = numpy.zeros((height, width, 3), dtype=numpy.uint8)
 
         assert 3 <= len(background_color) <= 4, "the background_color is something like RGB(255, 255, 255) or RGBA(0,0,0,0)"
         image[:, :] = list(background_color)[:3]
 
         # add an alpha layer for transparency
         if len(background_color) == 3:
-            image = np.insert(image, 3, 255, axis=2).astype(np.uint8)
+            image = numpy.insert(image, 3, 255, axis=2).astype(numpy.uint8)
         elif len(background_color) == 4:
-            image = np.insert(image, 3, background_color[3], axis=2).astype(np.uint8)
+            image = numpy.insert(image, 3, background_color[3], axis=2).astype(numpy.uint8)
 
         return image
+
+    def create_an_object(self, width=1920, height=1080, background_color=(255, 255, 255), existing_picture=None):
+        numpy_array = self._create_an_image(width, height, background_color, existing_picture)
+        return Object(numpy_array)
 
     def show_animation(self, a_function_which_returns_an_image_according_to_a_time_variable, duration=3, fps=24, saving_path=None):
         """
@@ -167,7 +183,7 @@ class World(Object):
         """
         def wrap_function(t):
             array = a_function_which_returns_an_image_according_to_a_time_variable(t)
-            assert isinstance(array, np.ndarray), "this function should return an numpy array"
+            assert isinstance(array, numpy.ndarray), "this function should return an numpy array"
             if array.shape[2] == 4:
                 array = array[:, :, 0:3]
 

@@ -1,0 +1,17 @@
+{
+    "name": "numpyworld",
+    "version": "0.0.3",
+    "author": "yingshaoxo@gmail.com",
+    "main": "main.py",
+    "scripts": {},
+    "dependencies": [
+        "git+https://github.com/yingshaoxo/auto_everything.git@dev",
+        "numpy",
+        "matplotlib",
+        "pillow",
+        "moviepy",
+        "pygame",
+        "ipykernel",
+        "pytest"
+    ]
+}
