@@ -88,6 +88,14 @@ class Object():
 
         self._color = tuple(new_color[:3])
 
+    def change_background_color(self, new_color):
+        new_color = list(new_color)
+        if len(new_color) == 3:
+            new_color.append(255)
+
+        shape = self.image.shape
+        self.image = numpy.full((shape[0], shape[1], 4), new_color).astype(numpy.uint8)
+
     def draw_a_point(self, x, y, color=(0, 0, 0)):
         if len(color) == 3:
             self.image[y][x] = (color[0], color[1], color[2], 255)
@@ -159,6 +167,8 @@ class Object():
         a_image = Image.fromarray(self.image).convert("RGBA")
         a_image.save(buffer, format='PNG')
         image_bytes = buffer.getvalue()
+        # a_image = Image.fromarray(self.image).convert("RGBA")
+        # image_bytes = a_image.tobytes()
         return image_bytes
 
 
