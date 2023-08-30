@@ -72,6 +72,12 @@ class Object():
         g = randint(0, 255)
         b = randint(0, 255)
         return (r, g, b)
+    
+    def get_height(self):
+        return self.image.shape[0]
+    
+    def get_width(self):
+        return self.image.shape[1]
 
     def change_color(self, new_color, old_color=None):
         if old_color == None:
