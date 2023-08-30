@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from moviepy.editor import VideoClip
 
 from random import randint
+import io
 
 
 class Object():
@@ -152,6 +153,13 @@ class Object():
 
     def save(self, target_file_path="__temp__.png"):
         Image.fromarray(self.image).convert("RGBA").save(target_file_path)
+    
+    def get_image_data_in_bytes(self) -> bytes:
+        buffer = io.BytesIO()
+        a_image = Image.fromarray(self.image).convert("RGBA")
+        a_image.save(buffer, format='PNG')
+        image_bytes = buffer.getvalue()
+        return image_bytes
 
 
 class World(Object):
